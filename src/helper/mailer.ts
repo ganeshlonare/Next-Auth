@@ -7,32 +7,42 @@ export const sendEMail = async ({email,emailType,userId}:any)=>{
 
       const hashedToken=await bcryptjs.hash(userId.toString(),10)
         if(emailType==="VERIFY"){
-          await User.findById(userId,{
+          await User.findByIdAndUpdate(userId,{
             verifyToken:hashedToken,
             verifyTokenExpiry:Date.now()+3600000
           })
+        }else if(emailType==="RESET"){
+          await User.findByIdAndUpdate(userId,{
+            forgotPasswordToken:hashedToken,
+            forgotPasswordTokenExpiry:Date.now()+3600000
+          })
         }
 
-        const transporter = nodemailer.createTransport({
-            host: "smtp.ethereal.email",
-            port: 587,
-            secure: false, // Use `true` for port 465, `false` for all other ports
-            auth: {
-              user: "maddison53@ethereal.email",
-              pass: "jn7jnAPss4f63QBp6D",
-            },
-          });
+        const transport = nodemailer.createTransport({
+          host: "sandbox.smtp.mailtrap.io",
+          port: 2525,
+          auth: {
+            user: "50a69d2d44b8d2",
+            pass: "287269ad1d4611"
+          }
+        });
 
           const mailOption={
-            from: "ganesh.ai",
+            from: "ganeshlonare311@gmail.com",
             to:email,
             subject: emailType==="VERIFY" ? "Verify Your Email" : "Reset Password",
-            html: "<b>Hello world?</b>", 
+            html: `<p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${hashedToken}">here</a> to ${
+              emailType === "VERIFY"?"verify your email":"reset your password"}
+              or copy and paste the link below in your browser
+              <br>
+              ${process.env.DOMAIN}/verifyemail?token=${hashedToken}
+              </p>`, 
           }
 
-          const mailResponse = await transporter.sendMail(mailOption)
+          const mailResponse = await transport.sendMail(mailOption)
           return mailResponse;
     } catch (error:any) {
+      console.log(error)
         throw new Error(error.msg)
     }
 }

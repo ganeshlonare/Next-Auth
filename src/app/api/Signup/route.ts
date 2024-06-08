@@ -8,8 +8,8 @@ connect()
 
 export async function POST(request:NextRequest) {
     try {
-        const reqBody=request.json()
-        const {username,email,password} : any=reqBody
+        const reqBody=await request.json()
+        const {username,email,password}=reqBody
 
         const user=await User.findOne({email})
         if(user){
@@ -30,7 +30,11 @@ export async function POST(request:NextRequest) {
 
         //send verification email
 
-        await sendEMail({email,emailType:"VERIFY",userId:savedUser._id})
+        await sendEMail({
+            email,
+            emailType:"VERIFY", 
+            userId:savedUser._id,
+        })
 
         return NextResponse.json({
             message:"User registered successfully",
@@ -39,6 +43,7 @@ export async function POST(request:NextRequest) {
         })
 
     } catch (error:any) {
+        console.log(error)
         return NextResponse.json({error:error.message},{status:500})
     }
 }
